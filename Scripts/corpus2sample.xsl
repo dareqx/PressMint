@@ -16,8 +16,8 @@
   <!-- Output directory for samples -->
   <xsl:param name="outDir"/>
   
-  <!-- Revision responsible person  -->
-  <xsl:param name="revRespPers">Tomaž Erjavec</xsl:param>
+  <!-- Revision responsible agency  -->
+  <xsl:param name="revRespPers">corpus2sample.xsl</xsl:param>
 
   <!-- How many TEI files to take -->
   <xsl:param name="Files">3</xsl:param>
@@ -233,6 +233,12 @@
        immediatelly preceding and intervening other elements -->
   <xsl:template match="tei:body">
     <xsl:variable name="all" select="count(//tei:text//tei:p)"/>
+    <xsl:if test="not(.//tei:p)">
+      <xsl:message select="concat('ERROR: no paragraphs in ', /tei:TEI/@xml:id)"/>
+    </xsl:if>
+    <xsl:if test="not(.//tei:p[@xml:id])">
+      <xsl:message terminate="yes" select="concat('FATAL: paragraphs in ', /tei:TEI/@xml:id, ' have no IDs!')"/>
+    </xsl:if>
     <xsl:copy>
       <xsl:apply-templates select="@*"/>
       <xsl:variable name="to">
@@ -279,7 +285,9 @@
       </xsl:variable>
       <xsl:if test="$incipit/tei:*">
         <xsl:copy-of select="$incipit"/>
-        <gap reason="editorial"><desc xml:lang="en">SAMPLING</desc></gap>
+        <xsl:if test="$explicit/tei:*">
+          <gap reason="editorial"><desc xml:lang="en">SAMPLING</desc></gap>
+        </xsl:if>
       </xsl:if>
       <xsl:copy-of select="$explicit"/>
     </xsl:variable>
@@ -291,8 +299,8 @@
   <xsl:template match="tei:body/node()">
     <xsl:param name="from">0</xsl:param>
     <xsl:param name="to">0</xsl:param>
-    <xsl:if test="($from = '0' and (self::tei:* | following::tei:*)[@xml:id = $to]) or 
-                  ($to   = '0' and (self::tei:* | preceding::tei:*)[@xml:id = $from])">
+    <xsl:if test="($from = '0' and (self::tei:* | following::tei:* | .//tei:*)[@xml:id = $to]) or 
+                  ($to   = '0' and (self::tei:* | preceding::tei:* | .//tei:*)[@xml:id = $from])">
       <xsl:choose>
         <xsl:when test="self::tei:gap[@reason='editorial' and ./tei:desc/text() = 'SAMPLING']" /> <!-- don't copy gap/desc SAMPLING -->
         <xsl:when test="self::tei:*">
