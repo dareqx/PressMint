@@ -236,19 +236,16 @@
     <xsl:if test="not(.//tei:p)">
       <xsl:message select="concat('ERROR: no paragraphs in ', /tei:TEI/@xml:id)"/>
     </xsl:if>
-    <xsl:if test="not(.//tei:p[@xml:id])">
-      <xsl:message terminate="yes" select="concat('FATAL: paragraphs in ', /tei:TEI/@xml:id, ' have no IDs!')"/>
-    </xsl:if>
     <xsl:copy>
       <xsl:apply-templates select="@*"/>
       <xsl:variable name="to">
         <xsl:choose>
           <!-- If there is too few <p>s in the document -->
           <xsl:when test="$all &lt; $Range">
-            <xsl:value-of select="(.//tei:p)[last()]/@xml:id"/>
+            <xsl:value-of select="generate-id((.//tei:p)[last()])"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="(.//tei:p)[position() = $Range]/@xml:id"/>
+            <xsl:value-of select="generate-id((.//tei:p)[position() = $Range])"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:variable>
@@ -257,7 +254,7 @@
           <!-- If there is too few <p>s in the document -->
           <xsl:when test="$all &lt; 2 * $Range">0</xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="(.//tei:p)[position() = $all - ($Range - 1)]/@xml:id"/>
+            <xsl:value-of select="generate-id((.//tei:p)[position() = $all - ($Range - 1)])"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:variable>
@@ -299,8 +296,8 @@
   <xsl:template match="tei:body/node()">
     <xsl:param name="from">0</xsl:param>
     <xsl:param name="to">0</xsl:param>
-    <xsl:if test="($from = '0' and (self::tei:* | following::tei:* | .//tei:*)[@xml:id = $to]) or 
-                  ($to   = '0' and (self::tei:* | preceding::tei:* | .//tei:*)[@xml:id = $from])">
+    <xsl:if test="($from = '0' and (self::tei:* | following::tei:* | .//tei:*)[generate-id(.) = $to]) or 
+                  ($to   = '0' and (self::tei:* | preceding::tei:* | .//tei:*)[generate-id(.) = $from])">
       <xsl:choose>
         <xsl:when test="self::tei:gap[@reason='editorial' and ./tei:desc/text() = 'SAMPLING']" /> <!-- don't copy gap/desc SAMPLING -->
         <xsl:when test="self::tei:*">
